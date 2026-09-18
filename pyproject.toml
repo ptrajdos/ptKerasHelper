@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ptKerasHelper"
+dynamic = ["version", "readme"]
+dependencies = [
+    'dexterous_bioprosthesis_2021_raw_datasets @ git+https://github.com/ptrajdos/dexterous-bioprosthesis-2021-raw-dataset.git',
+    'keras>=3.0.0',
+]
+requires-python = ">=3.10"
+authors = [
+  {name = "Pawel Trajdos", email = "pawel.trajdos@pwr.edu.pl"},
+]
+maintainers = [
+  {name = "Pawel Trajdos", email = "pawel.trajdos@pwr.edu.pl"}
+]
+description = "Helper module for using Keras 3+"
+
+license = "BSD-3-Clause"
+license-files = ["LICEN[CS]E.*"]
+keywords = ["scikit-learn", "augmentation"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+
+[project.optional-dependencies]
+
+dev = [
+    'coverage>=7.10.7, <8.0.0',
+    'unittest-parallel>=1.7.0, <2.0.0',
+    'pandas>=2.0.0, <3.0.0',
+    'pdoc3>=0.11.1, <0.12',
+    'pytest>=8.4.2, <9.0.0',
+    'pytest-cov>=6.3.0, <7.0.0',
+    'pytest-profiling>=1.8.1, <2.0.0',
+    'pytest-xdist>=3.6.1, < 4.0.0',
+    'snakeviz>=2.2.2, <3.0.0',
+    'pylint>=3.3.9, <4.0.0',
+    'flake8>=7.3.0, <8.0.0',
+    'mypy>=1.19.1, <2.0.0',
+    'tox>=4.0.0, <5.0.0',
+]
+current_tf = [
+    'tensorflow', 
+    'tensorflow-probability',
+    'tf_keras',
+]
+old_tf = [
+    'tensorflow<2.16',
+    'tensorflow-probability',
+    'tf_keras',
+
+]
+old_tf_cuda = [
+    'tensorflow-probability',
+    'tf_keras<2.16.0',
+    'tensorflow[and-cuda]<2.16.0',
+]
+current_tf_cuda = [
+    'tensorflow-probability',
+    'tensorflow[and-cuda]',
+    'tf_keras',
+]
+current_tf_macos = [
+    'tensorflow-probability<0.25.0',
+    'tensorflow<=2.15.0',
+    'tensorflow-metal<1.2.0',
+    'tf_keras>=2.15.1',
+]
+torch_current = [
+    'torch',
+    'torchvision',
+]
+jax_current = [
+    'jax',
+    'jaxlib',
+]
+jax_macos = [
+  'jax[metal]',
+  'jaxlib'
+]
+
+
+[tool.setuptools.dynamic]
+version = {attr = "pt_keras_helper.__version__"}  # any module attribute compatible with ast.literal_eval
+readme = {file = ["README.md"]}
+
+[project.urls]
+Repository = "https://github.com/ptrajdos/ptKerasHelper.git"
+
+[tool.setuptools]
+packages = { find = { include = ["pt_keras_helper", "pt_keras_helper.*"] } }
+
+[project.scripts]
+verification = "pt_keras_helper.verification:main"
+example_run = "pt_keras_helper.example_run:main"
