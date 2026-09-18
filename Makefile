@@ -106,3 +106,6 @@ verify_installation: pypackages
 	
 example_run: pypackages
 	${ACTIVATE}; example_run
+
+example_run2: pypackages
+	${ACTIVATE}; example_run2

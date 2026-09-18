@@ -1,9 +1,34 @@
-import numpy as np
 import keras
 
 from sklearn.base import RegressorMixin
-from sklearn.utils.validation import check_X_y, check_array
 from keras.wrappers import SKLearnRegressor
+from keras.src.wrappers.fixes import _validate_data
+from keras.src.wrappers.utils import _check_model
+
+def make_model_default(X, y, hidden_units=64):
+    """
+    Keras model factory.
+
+    X and y are provided automatically by the wrapper.
+    """
+
+    n_features = X.shape[-1]    
+    n_outputs = 1 if len(y.shape) == 1 else y.shape[1]
+
+    model = keras.Sequential([
+        keras.layers.Input(shape=(n_features,)),
+        keras.layers.Dense(hidden_units, activation="relu"),
+        keras.layers.Dense(32, activation="relu"),
+        keras.layers.Dense(n_outputs),
+    ])
+
+    model.compile(
+        optimizer="adam",
+        loss="mse",
+        metrics=["mae"],
+    )
+
+    return model
 
 
 class MultiOutputKerasRegressor(SKLearnRegressor, RegressorMixin):
@@ -16,59 +41,24 @@ class MultiOutputKerasRegressor(SKLearnRegressor, RegressorMixin):
 
     X and y are passed to the factory so their dimensions can be inferred.
     """
+    pass
 
     def fit(self, X, y, **kwargs):
-        # Keras' SKLearnRegressor validates y as 1D.
-        # We replace that validation with sklearn's multi-output validation.
-        X, y = check_X_y(
-            X,
-            y,
-            multi_output=True,
-            y_numeric=True,
-            ensure_2d=False,
-            allow_nd=True,
-        )
+        X, y = _validate_data(self, X, y, multi_output=True, y_numeric=True)
+        # self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
+        y = self._process_target(y, reset=True)
+        model = self._get_model(X, y)
+        _check_model(model)
 
-        self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
-
-        # Infer dimensions through the model factory.
-        if callable(self.model):
-            model_kwargs = self.model_kwargs or {}
-
-            self.model_ = self.model(
-                X,
-                y,
-                **model_kwargs,
-            )
-        else:
-            if not self.warm_start:
-                self.model_ = keras.models.clone_model(self.model)
-            else:
-                self.model_ = self.model
-
-        # Fit arguments supplied to constructor + arguments supplied to fit()
-        fit_kwargs = dict(self.fit_kwargs or {})
+        fit_kwargs = self.fit_kwargs or {}
         fit_kwargs.update(kwargs)
+        self.history_ = model.fit(X, y, **fit_kwargs)
 
-        self.history_ = self.model_.fit(
-            X,
-            y,
-            **fit_kwargs,
-        )
+        self.model_ = model
 
+        
         return self
 
-    def predict(self, X):
-        X = check_array(
-            X,
-            ensure_2d=False,
-            allow_nd=True,
-        )
-
-        return self.model_.predict(
-            X,
-            verbose=0,
-        )
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()

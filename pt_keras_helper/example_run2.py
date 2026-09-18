@@ -2,6 +2,9 @@ import numpy as np
 import keras
 
 from pt_keras_helper.estimators.multioutput_keras_regressor import MultiOutputKerasRegressor
+from sklearn.metrics import (
+    r2_score,
+)
 
 # ----------------------------------------------------------------------
 # Model factory
@@ -69,9 +72,13 @@ def main():
     reg.fit(X, y)
 
     predictions = reg.predict(X[:5])
+    y_true = y[:5]
+    r2_value = r2_score(y_true=y_true, y_pred=predictions)
 
     print("Predictions:", predictions.shape)
     print(predictions)
+
+    print(f"R2 score: {r2_value}")
 
     print()
     print("Keras model:")

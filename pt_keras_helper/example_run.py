@@ -3,6 +3,7 @@
 import numpy as np
 import keras
 
+
 def main():
     # ----------------------------------------------------------------------
     # 1. Generate data
