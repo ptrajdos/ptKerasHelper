@@ -44,8 +44,8 @@ class MultiOutputKerasRegressor(SKLearnRegressor, RegressorMixin):
     pass
 
     def fit(self, X, y, **kwargs):
-        X, y = _validate_data(self, X, y, multi_output=True, y_numeric=True, ensure_2d=False, allow_nd=False)
-        self.n_features_in_ = X.shape[-1]
+        X, y = _validate_data(self, X, y, multi_output=True, y_numeric=True, ensure_2d=True, allow_nd=True)
+        # self.n_features_in_ = X.shape[-1]
         
         y = self._process_target(y, reset=True)
         model = self._get_model(X, y)
@@ -59,6 +59,15 @@ class MultiOutputKerasRegressor(SKLearnRegressor, RegressorMixin):
 
         
         return self
+    
+    def predict(self, X):
+        """Predict using the model."""
+        from sklearn.utils.validation import check_is_fitted
+
+        check_is_fitted(self)
+        X = _validate_data(self, X, reset=False, ensure_2d=True, allow_nd=True)
+        raw_output = self.model_.predict(X)
+        return self._reverse_process_target(raw_output)
 
 
     def __sklearn_tags__(self):
