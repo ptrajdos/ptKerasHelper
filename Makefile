@@ -109,3 +109,6 @@ example_run: pypackages
 
 example_run2: pypackages
 	${ACTIVATE}; example_run2
+
+example_run3: pypackages
+	${ACTIVATE}; example_run3
