@@ -44,8 +44,9 @@ class MultiOutputKerasRegressor(SKLearnRegressor, RegressorMixin):
     pass
 
     def fit(self, X, y, **kwargs):
-        X, y = _validate_data(self, X, y, multi_output=True, y_numeric=True)
-        # self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
+        X, y = _validate_data(self, X, y, multi_output=True, y_numeric=True, ensure_2d=False, allow_nd=False)
+        self.n_features_in_ = X.shape[-1]
+        
         y = self._process_target(y, reset=True)
         model = self._get_model(X, y)
         _check_model(model)

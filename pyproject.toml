@@ -124,3 +124,4 @@ packages = { find = { include = ["pt_keras_helper", "pt_keras_helper.*"] } }
 verification = "pt_keras_helper.verification:main"
 example_run = "pt_keras_helper.example_run:main"
 example_run2 = "pt_keras_helper.example_run2:main"
+example_run3 = "pt_keras_helper.example_run3:main"
