@@ -1,112 +1,155 @@
 import numpy as np
 import keras
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.base import RegressorMixin
+from sklearn.utils.validation import check_X_y, check_array
 from keras.wrappers import SKLearnRegressor
 
-def main():
-    # ------------------------------------------------------------
-    # Model factory
-    # ------------------------------------------------------------
 
-    def make_model(X, y):
-        n_features = X.shape[1]
-        n_targets = y.shape[1]
+class MultiOutputKerasRegressor(SKLearnRegressor, RegressorMixin):
+    """
+    Keras 3 SKLearnRegressor with proper multi-output regression support.
 
-        model = keras.Sequential([
-            keras.layers.Input(shape=(n_features,)),
-            keras.layers.Dense(64, activation="relu"),
-            keras.layers.Dense(32, activation="relu"),
-            keras.layers.Dense(n_targets),       # multi-target output
-        ])
+    The model must be a callable:
 
-        model.compile(
-            optimizer="adam",
-            loss="mse",
+        model(X, y, **model_kwargs) -> compiled Keras model
+
+    X and y are passed to the factory so their dimensions can be inferred.
+    """
+
+    def fit(self, X, y, **kwargs):
+        # Keras' SKLearnRegressor validates y as 1D.
+        # We replace that validation with sklearn's multi-output validation.
+        X, y = check_X_y(
+            X,
+            y,
+            multi_output=True,
+            y_numeric=True,
+            ensure_2d=False,
+            allow_nd=True,
         )
 
-        return model
+        self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
+
+        # Infer dimensions through the model factory.
+        if callable(self.model):
+            model_kwargs = self.model_kwargs or {}
+
+            self.model_ = self.model(
+                X,
+                y,
+                **model_kwargs,
+            )
+        else:
+            if not self.warm_start:
+                self.model_ = keras.models.clone_model(self.model)
+            else:
+                self.model_ = self.model
+
+        # Fit arguments supplied to constructor + arguments supplied to fit()
+        fit_kwargs = dict(self.fit_kwargs or {})
+        fit_kwargs.update(kwargs)
+
+        self.history_ = self.model_.fit(
+            X,
+            y,
+            **fit_kwargs,
+        )
+
+        return self
+
+    def predict(self, X):
+        X = check_array(
+            X,
+            ensure_2d=False,
+            allow_nd=True,
+        )
+
+        return self.model_.predict(
+            X,
+            verbose=0,
+        )
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.target_tags.multi_output = True
+        return tags
 
 
-    # ------------------------------------------------------------
-    # Generate example data
-    # ------------------------------------------------------------
+# ----------------------------------------------------------------------
+# Model factory
+# ----------------------------------------------------------------------
 
-    rng = np.random.default_rng(42)
+def make_model(X, y, hidden_units=64):
+    """
+    Keras model factory.
 
-    n_samples = 2000
-    n_features = 10
-    n_targets = 3
+    X and y are provided automatically by the wrapper.
+    """
 
-    X = rng.normal(size=(n_samples, n_features))
+    n_features = X.shape[-1]
+    n_outputs = y.shape[1]
 
-    # Three target variables
-    y = np.column_stack([
-        2 * X[:, 0] + X[:, 1] + rng.normal(0, 0.1, n_samples),
-        X[:, 2] - 3 * X[:, 3] + rng.normal(0, 0.1, n_samples),
-        X[:, 4] + X[:, 5] + rng.normal(0, 0.1, n_samples),
+    model = keras.Sequential([
+        keras.layers.Input(shape=(n_features,)),
+        keras.layers.Dense(hidden_units, activation="relu"),
+        keras.layers.Dense(32, activation="relu"),
+        keras.layers.Dense(n_outputs),
     ])
 
-
-    # ------------------------------------------------------------
-    # Train/test split
-    # ------------------------------------------------------------
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=0.2,
-        random_state=42,
+    model.compile(
+        optimizer="adam",
+        loss="mse",
+        metrics=["mae"],
     )
 
+    return model
 
-    # ------------------------------------------------------------
-    # sklearn-style Keras estimator
-    # ------------------------------------------------------------
 
-    reg = SKLearnRegressor(
+# ----------------------------------------------------------------------
+# Example
+# ----------------------------------------------------------------------
+
+def main():
+    rng = np.random.default_rng(42)
+
+    # 2000 samples, 10 input features
+    X = rng.normal(size=(2000, 10))
+
+    # 3 regression targets
+    y = np.column_stack([
+        X[:, 0] + 2 * X[:, 1],
+        X[:, 2] - X[:, 3],
+        X[:, 4] + X[:, 5] + X[:, 6],
+    ])
+
+    print("X:", X.shape)
+    print("y:", y.shape)
+
+    reg = MultiOutputKerasRegressor(
         model=make_model,
+        model_kwargs={
+            "hidden_units": 64,
+        },
         fit_kwargs={
-            "epochs": 50,
+            "epochs": 10,
             "batch_size": 32,
             "verbose": 0,
+            "validation_split": 0.1,
         },
     )
 
+    reg.fit(X, y)
 
-    # ------------------------------------------------------------
-    # Fit / predict
-    # ------------------------------------------------------------
+    predictions = reg.predict(X[:5])
 
-    reg.fit(X_train, y_train)
+    print("Predictions:", predictions.shape)
+    print(predictions)
 
-    y_pred = reg.predict(X_test)
+    print()
+    print("Keras model:")
+    reg.model_.summary()
 
-
-    # ------------------------------------------------------------
-    # Evaluation
-    # ------------------------------------------------------------
-
-    print("y_test shape:", y_test.shape)
-    print("y_pred shape:", y_pred.shape)
-
-    print("\nR² per target:")
-    print(r2_score(y_test, y_pred, multioutput="raw_values"))
-
-    print("\nRMSE per target:")
-    print(
-        np.sqrt(
-            mean_squared_error(
-                y_test,
-                y_pred,
-                multioutput="raw_values",
-            )
-        )
-    )
-
-    print("\nOverall R²:")
-    print(r2_score(y_test, y_pred))
 
 if __name__ == "__main__":
     main()
