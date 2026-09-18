@@ -78,8 +78,24 @@ torch_old = [
     'torch<=2.7.0',
     'torchvision',
 ]
-jax_current = [
+jax_current_cpu = [
     'jax',
+    'jaxlib',
+]
+jax_cuda_12 = [
+    'jax[cuda12]',
+    'jaxlib',
+]
+jax_cuda_13 = [
+    'jax[cuda13]',
+    'jaxlib',
+]
+jax_rocm = [
+    'jax[rocm7-local]',
+    'jaxlib',
+]
+jax_oneapi = [
+    'jax[oneapi]',
     'jaxlib',
 ]
 jax_macos = [
