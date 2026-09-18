@@ -18,6 +18,8 @@ def test_backend(backend):
         if backend == "tensorflow":
             import tensorflow as tf
 
+            print(f"TF version: {tf.__version__}")
+            print("Build:", tf.sysconfig.get_build_info())
             print("CPUs:")
             for device in tf.config.list_physical_devices("CPU"):
                 print(f"  {device}")
@@ -32,10 +34,14 @@ def test_backend(backend):
             print(f"PyTorch version: {torch.__version__}")
             print("CPU: available")
             print(f"CUDA available: {torch.cuda.is_available()}")
+            
 
             if torch.cuda.is_available():
+                print("CUDA version:", torch.version.cuda)
                 print(f"CUDA devices: {torch.cuda.device_count()}")
                 for i in range(torch.cuda.device_count()):
+                    print("Capability:", torch.cuda.get_device_capability())
+                    print("Architectures:", torch.cuda.get_arch_list())
                     print(f"  GPU {i}: {torch.cuda.get_device_name(i)}")
 
         elif backend == "jax":

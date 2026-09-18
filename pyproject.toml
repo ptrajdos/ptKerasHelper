@@ -74,6 +74,10 @@ torch_current = [
     'torch',
     'torchvision',
 ]
+torch_old = [
+    'torch<=2.14.0',
+    'torchvision',
+]
 jax_current = [
     'jax',
     'jaxlib',
