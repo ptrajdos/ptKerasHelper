@@ -35,7 +35,7 @@ def make_lstm(X, y, units=32):
             shape=(n_timesteps, n_features)
         ),
 
-        keras.layers.LSTM(units),
+        keras.layers.LSTM(units, recurrent_initializer="glorot_uniform",),
 
         keras.layers.Dense(32, activation="relu"),
 

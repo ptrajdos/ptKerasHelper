@@ -101,7 +101,8 @@ jax_oneapi = [
 ]
 jax_metal = [
   'jax-metal',
-  'jaxlib'
+  'jaxlib<=0.4.35',
+  'jav<=0.4.35',
 ]
 
 jax = [
