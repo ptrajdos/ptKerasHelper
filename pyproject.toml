@@ -66,10 +66,10 @@ current_tf_cuda = [
     'tf_keras',
 ]
 current_tf_macos = [
-    'tensorflow-probability<0.25.0',
-    'tensorflow<=2.15.0',
-    'tensorflow-metal<1.2.0',
-    'tf_keras>=2.15.1',
+    'tensorflow-probability',
+    'tensorflow>=2.18.0, <2.19.0',
+    'tensorflow-metal==1.2.0',
+    'tf_keras',
 ]
 torch_current = [
     'torch',
